@@ -1,0 +1,448 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexPilot 2.0</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #070711;
+    color: white;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+/* INTRO */
+
+#intro {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    background: radial-gradient(circle, #171044, #070711 65%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 1s, visibility 1s;
+}
+
+#intro.hide {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.orb {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%,
+        #ffffff, #9c66ff 20%, #4920b9 55%, #08051e);
+    box-shadow: 0 0 35px #874aff,
+                0 0 90px #5425d9,
+                inset -15px -15px 35px #08051e;
+    animation: float 3s ease-in-out infinite,
+               glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-22px) rotate(10deg); }
+}
+
+@keyframes glow {
+    from { box-shadow: 0 0 25px #874aff; }
+    to { box-shadow: 0 0 100px #874aff, 0 0 150px #3920a9; }
+}
+
+.intro-title {
+    font-size: 42px;
+    letter-spacing: 9px;
+    margin-top: 35px;
+    background: linear-gradient(90deg, #fff, #a783ff, #4ccaff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: appear 2s ease;
+}
+
+.intro-subtitle {
+    margin-top: 15px;
+    color: #aaa4d0;
+    letter-spacing: 3px;
+    animation: appear 3s ease;
+}
+
+.loading {
+    width: 190px;
+    height: 4px;
+    background: #272044;
+    margin-top: 40px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.loading span {
+    display: block;
+    width: 0%;
+    height: 100%;
+    background: #a16bff;
+    animation: load 3s ease forwards;
+}
+
+@keyframes load {
+    to { width: 100%; }
+}
+
+@keyframes appear {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* DASHBOARD */
+
+#dashboard {
+    height: 100vh;
+    display: flex;
+    opacity: 0;
+    animation: appear 1s forwards;
+    animation-delay: 3.3s;
+}
+
+.sidebar {
+    width: 245px;
+    background: #0c0b19;
+    border-right: 1px solid #25203c;
+    padding: 25px 18px;
+}
+
+.logo {
+    font-size: 25px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    color: #a981ff;
+    margin-bottom: 40px;
+}
+
+.nav-button {
+    display: block;
+    width: 100%;
+    background: transparent;
+    color: #aaa6c5;
+    border: none;
+    padding: 15px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 14px;
+    transition: .2s;
+}
+
+.nav-button:hover,
+.nav-button.active {
+    background: #21183c;
+    color: white;
+    box-shadow: inset 3px 0 #a16bff;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.topbar {
+    height: 75px;
+    border-bottom: 1px solid #25203c;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+}
+
+.status {
+    color: #7ee6b0;
+    font-size: 13px;
+}
+
+.chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 35px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.welcome {
+    text-align: center;
+    margin: auto;
+    max-width: 500px;
+}
+
+.welcome h1 {
+    font-size: 38px;
+    margin-bottom: 15px;
+    background: linear-gradient(90deg, #a879ff, #55c8ff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.welcome p {
+    color: #9995b2;
+    line-height: 1.7;
+}
+
+.message {
+    padding: 16px 20px;
+    border-radius: 15px;
+    max-width: 75%;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.user {
+    align-self: flex-end;
+    background: #43258a;
+}
+
+.director {
+    align-self: flex-start;
+    background: #171528;
+    border: 1px solid #332858;
+}
+
+.input-area {
+    padding: 20px 30px;
+    border-top: 1px solid #25203c;
+    display: flex;
+    gap: 12px;
+}
+
+#prompt {
+    flex: 1;
+    min-width: 0;
+    background: #151326;
+    border: 1px solid #393052;
+    padding: 16px;
+    border-radius: 12px;
+    color: white;
+    outline: none;
+    font-size: 15px;
+}
+
+#prompt:focus {
+    border-color: #9b6aff;
+}
+
+#send {
+    background: linear-gradient(135deg, #7945db, #4b75d9);
+    color: white;
+    border: none;
+    padding: 0 25px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#send:hover {
+    filter: brightness(1.2);
+}
+
+@media(max-width: 650px) {
+    .sidebar {
+        width: 75px;
+        padding: 15px 7px;
+    }
+
+    .logo {
+        font-size: 11px;
+        letter-spacing: 0;
+        text-align: center;
+    }
+
+    .nav-button {
+        font-size: 10px;
+        padding: 12px 5px;
+        text-align: center;
+    }
+
+    .chat {
+        padding: 15px;
+    }
+
+    .topbar {
+        padding: 0 12px;
+    }
+
+    .input-area {
+        padding: 12px;
+    }
+
+    .intro-title {
+        font-size: 25px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- INTRO ANIMATION -->
+
+<div id="intro">
+    <div class="orb"></div>
+    <h1 class="intro-title">NEXPILOT</h1>
+    <p class="intro-subtitle">YOUR INTELLIGENCE. YOUR POSSIBILITIES.</p>
+    <div class="loading"><span></span></div>
+</div>
+
+<!-- MAIN DASHBOARD -->
+
+<div id="dashboard">
+
+    <aside class="sidebar">
+        <div class="logo">NEXPILOT</div>
+
+        <button class="nav-button active">✦ AI Assistant</button>
+        <button class="nav-button" onclick="newChat()">＋ New Chat</button>
+        <button class="nav-button">◈ Projects</button>
+        <button class="nav-button">⌘ Workspace</button>
+        <button class="nav-button">⚙ Settings</button>
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar">
+            <strong>NexPilot AI</strong>
+            <span class="status" id="status">● Connecting...</span>
+        </header>
+
+        <section class="chat" id="chat">
+
+            <div class="welcome" id="welcome">
+                <h1>Welcome to NexPilot.</h1>
+                <p>
+                    Your intelligent workspace starts here.
+                    Ask questions, explore ideas, and build something amazing.
+                </p>
+            </div>
+
+        </section>
+
+        <div class="input-area">
+            <input
+                id="prompt"
+                type="text"
+                placeholder="Ask NexPilot anything..."
+                autocomplete="off"
+            >
+            <button id="send" onclick="sendMessage()">SEND ➤</button>
+        </div>
+
+    </main>
+</div>
+
+<script>
+const API_URL = "YOUR_RENDER_URL";
+
+const chat = document.getElementById("chat");
+const promptInput = document.getElementById("prompt");
+const statusText = document.getElementById("status");
+
+function addMessage(text, type) {
+    const message = document.createElement("div");
+    message.className = "message " + type;
+    message.textContent = text;
+    chat.appendChild(message);
+    chat.scrollTop = chat.scrollHeight;
+    return message;
+}
+
+function newChat() {
+    chat.innerHTML = `
+        <div class="welcome" id="welcome">
+            <h1>Welcome to NexPilot.</h1>
+            <p>Your next big idea starts here.</p>
+        </div>
+    `;
+}
+
+async function checkConnection() {
+    try {
+        const response = await fetch(API_URL + "/api/health");
+        if (!response.ok) throw new Error("Backend unavailable");
+
+        statusText.textContent = "● Backend Online";
+        statusText.style.color = "#7ee6b0";
+    } catch (error) {
+        statusText.textContent = "● Backend Offline";
+        statusText.style.color = "#ff7777";
+    }
+}
+
+async function sendMessage() {
+    const text = promptInput.value.trim();
+
+    if (!text) return;
+
+    const welcome = document.getElementById("welcome");
+    if (welcome) welcome.remove();
+
+    addMessage(text, "user");
+    promptInput.value = "";
+
+    const thinking = addMessage("NexPilot is thinking...", "director");
+
+    try {
+        const response = await fetch(API_URL + "/api/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ message: text })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Server error");
+        }
+
+        thinking.textContent = data.reply || data.response || "No response received.";
+
+    } catch (error) {
+        thinking.textContent =
+            "I couldn't reach my AI response service. Please check the backend connection.";
+        console.error(error);
+    }
+
+    chat.scrollTop = chat.scrollHeight;
+}
+
+promptInput.addEventListener("keydown", event => {
+    if (event.key === "Enter") sendMessage();
+});
+
+window.addEventListener("load", () => {
+    checkConnection();
+});
+
+setTimeout(() => {
+    document.getElementById("intro").classList.add("hide");
+}, 3300);
+</script>
+
+</body>
+</html>
