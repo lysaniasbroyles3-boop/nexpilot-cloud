@@ -378,16 +378,31 @@ function newChat() {
     `;
 }
 
+
+
 async function checkConnection() {
     try {
-        const response = await fetch(API_URL + "/api/health");
-        if (!response.ok) throw new Error("Backend unavailable");
+        const response = await fetch(
+            API_URL + "/api/health",
+            { method: "GET" }
+        );
+
+        if (!response.ok) {
+            throw new Error("Backend returned " + response.status);
+        }
+
+        const data = await response.json();
 
         statusText.textContent = "● Backend Online";
         statusText.style.color = "#7ee6b0";
+
+        console.log("NexPilot connected:", data);
+
     } catch (error) {
         statusText.textContent = "● Backend Offline";
         statusText.style.color = "#ff7777";
+
+        console.error("Connection error:", error);
     }
 }
 
