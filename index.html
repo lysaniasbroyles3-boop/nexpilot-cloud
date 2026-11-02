@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -324,16 +323,15 @@ body {
 
     <main class="main">
 
-    <header class="topbar">
-    <strong>NexPilot AI</strong>
-    <div style="display:flex; gap:15px; flex-wrap:wrap;">
-        <span class="status" id="status">● Backend checking</span>
-        <span class="status" id="aiStatus">● AI not loaded</span>
-    </div>
-</header>
+        <header class="topbar">
+            <strong>NexPilot AI</strong>
+            <div style="display:flex; gap:15px; flex-wrap:wrap;">
+                <span class="status" id="status">● Backend checking</span>
+                <span class="status" id="aiStatus">● AI not loaded</span>
+            </div>
+        </header>
 
         <section class="chat" id="chat">
-
             <div class="welcome" id="welcome">
                 <h1>Welcome to NexPilot.</h1>
                 <p>
@@ -341,7 +339,6 @@ body {
                     Ask questions, explore ideas, and build something amazing.
                 </p>
             </div>
-
         </section>
 
         <div class="input-area">
@@ -357,14 +354,13 @@ body {
     </main>
 </div>
 
-
+<!-- NEXPILOT AI ENGINE -->
 
 <script type="module">
 
 import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
 const API_URL = "https://nexpilot-cloud-wgli.onrender.com";
-
 const MODEL_ID = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
 
 let engine = null;
@@ -378,7 +374,7 @@ const sendButton = document.getElementById("send");
 const conversation = [
     {
         role: "system",
-        content: "You are NexPilot, a friendly, intelligent AI assistant. You help users with questions, ideas, learning, creativity, and programming. Give clear and useful answers."
+        content: "You are NexPilot, a friendly, intelligent AI assistant. Help with questions, ideas, learning, creativity, and programming. Give clear, useful answers."
     }
 ];
 
@@ -398,7 +394,6 @@ function newChat() {
             <p>Your next big idea starts here.</p>
         </div>
     `;
-
     conversation.splice(1);
 }
 
@@ -406,7 +401,9 @@ async function checkConnection() {
     try {
         const response = await fetch(API_URL + "/api/health");
 
-        if (!response.ok) throw new Error("Backend unavailable");
+        if (!response.ok) {
+            throw new Error("Backend unavailable");
+        }
 
         statusText.textContent = "● Backend Online";
         statusText.style.color = "#7ee6b0";
@@ -418,27 +415,34 @@ async function checkConnection() {
 }
 
 async function loadAI() {
+    sendButton.disabled = true;
+
     try {
         if (!navigator.gpu) {
             throw new Error(
-                "WebGPU is unavailable. This browser or device may not support local AI."
+                "WebGPU is unavailable in this browser or on this device."
             );
         }
 
         aiStatus.textContent = "● Loading AI...";
+        aiStatus.style.color = "#ffd479";
 
-        engine = await CreateMLCEngine(
-            MODEL_ID,
-            {
-                initProgressCallback: (progress) => {
-                    aiStatus.textContent =
-                        "● " + (progress.text || "Loading AI...");
-                }
+        engine = await CreateMLCEngine(MODEL_ID, {
+            initProgressCallback: (progress) => {
+                aiStatus.textContent =
+                    "● " + (progress.text || "Loading AI...");
             }
-        );
+        });
 
         aiStatus.textContent = "● Llama AI Ready";
         aiStatus.style.color = "#7ee6b0";
+
+        sendButton.disabled = false;
+
+        addMessage(
+            "NexPilot is ready! What would you like to work on?",
+            "director"
+        );
 
     } catch (error) {
         console.error("AI loading error:", error);
@@ -447,7 +451,8 @@ async function loadAI() {
         aiStatus.style.color = "#ff7777";
 
         addMessage(
-            "I couldn't load my AI model. " + error.message,
+            "I couldn't load the AI model. " + error.message +
+            " Try reloading the page. The first model download can take a while.",
             "director"
         );
     }
@@ -456,10 +461,23 @@ async function loadAI() {
 async function sendMessage() {
     const text = promptInput.value.trim();
 
-    if (!text || !engine || sendButton.disabled) return;
+    if (!text) return;
+
+    if (!engine) {
+        addMessage(
+            "The AI is not ready yet. Wait until the AI status says Llama AI Ready.",
+            "director"
+        );
+        return;
+    }
+
+    if (sendButton.disabled) return;
 
     const welcome = document.getElementById("welcome");
-    if (welcome) welcome.remove();
+
+    if (welcome) {
+        welcome.remove();
+    }
 
     addMessage(text, "user");
     promptInput.value = "";
@@ -469,7 +487,10 @@ async function sendMessage() {
         content: text
     });
 
-    const thinking = addMessage("NexPilot is thinking...", "director");
+    const thinking = addMessage(
+        "NexPilot is thinking...",
+        "director"
+    );
 
     sendButton.disabled = true;
 
@@ -492,8 +513,13 @@ async function sendMessage() {
 
         for await (const chunk of chunks) {
             reply += chunk.choices[0]?.delta?.content || "";
-            thinking.textContent = reply;
+            thinking.textContent = reply || "NexPilot is thinking...";
             chat.scrollTop = chat.scrollHeight;
+        }
+
+        if (!reply.trim()) {
+            reply = "I didn't receive a response. Please try asking again.";
+            thinking.textContent = reply;
         }
 
         conversation.push({
@@ -505,16 +531,22 @@ async function sendMessage() {
         console.error("Chat error:", error);
 
         thinking.textContent =
-            "I encountered an error generating that response.";
+            "I ran into a problem generating that response. Please try again.";
 
     } finally {
         sendButton.disabled = false;
+        promptInput.focus();
         chat.scrollTop = chat.scrollHeight;
     }
 }
 
-promptInput.addEventListener("keydown", event => {
+// Make functions available to the HTML buttons.
+window.newChat = newChat;
+window.sendMessage = sendMessage;
+
+promptInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
+        event.preventDefault();
         sendMessage();
     }
 });
@@ -528,3 +560,4 @@ window.addEventListener("load", () => {
 
 </body>
 </html>
+
