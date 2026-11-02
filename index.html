@@ -324,9 +324,12 @@ body {
 
     <main class="main">
 
-        <header class="topbar">
+    <header class="topbar">
     <strong>NexPilot AI</strong>
-    <span class="status" id="status">● Connecting...</span>
+    <div style="display:flex; gap:15px; flex-wrap:wrap;">
+        <span class="status" id="status">● Backend checking</span>
+        <span class="status" id="aiStatus">● AI not loaded</span>
+    </div>
 </header>
 
         <section class="chat" id="chat">
